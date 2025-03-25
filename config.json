@@ -1,0 +1,12 @@
+{
+  "generate": {
+    "amount": 1
+  },
+  "process": {
+    "amount": 1
+  },
+  "store": {
+    "name": "postgres",
+    "initialisation_script": ""
+  }
+}
