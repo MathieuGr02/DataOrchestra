@@ -1,32 +1,18 @@
-use std::{fs, thread};
+use std::{fs, thread, env};
+use std::fs::File;
+use std::path::Path;
 use std::process::{Child, Command};
 use serde::{Deserialize};
-use std::env;
+
+use HeterogeneousDataOrchester::generate::generate_struct::Generate;
+use HeterogeneousDataOrchester::process::process_struct::Process;
+use HeterogeneousDataOrchester::store::store_struct::Store;
 
 #[derive(Debug, Deserialize)]
 struct Config {
-    amount_workers: i32
-}
-
-struct Database {
-    name: str,
-    init_script: str
-}
-
-#[derive(Debug, Deserialize)]
-struct Generate {
-    amount: i32
-}
-
-#[derive(Debug, Deserialize)]
-struct Process {
-    amount: i32
-}
-
-#[derive(Debug, Deserialize)]
-struct Store {
-    name: str,
-    initialisation_script: str
+    process: Process,
+    generate: Generate,
+    store: Store
 }
 
 fn main() {

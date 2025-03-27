@@ -1,8 +1,10 @@
 {
   "generate": {
+    "language": "",
     "amount": 1
   },
   "process": {
+    "language": "",
     "amount": 1
   },
   "store": {
