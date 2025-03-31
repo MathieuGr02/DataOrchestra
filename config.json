@@ -1,14 +1,20 @@
 {
-  "generate": {
+  "generate": 
+  {
     "language": "",
+    "script_location":  "",
     "amount": 1
   },
-  "process": {
+  "process": [{
     "language": "",
+    "script_location" : "",
     "amount": 1
-  },
+  }],
   "store": {
-    "name": "postgres",
-    "initialisation_script": ""
+    "image": "postgres",
+    "initialisation_script": "",
+    "store_options": {
+      "POSTGRES_PASSWORD": "HELLO"
+    }
   }
 }

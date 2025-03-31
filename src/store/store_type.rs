@@ -1,6 +1,6 @@
 use super::super::common::common_trait::ToValue;
 
-enum StoreType {
+pub enum StoreType {
     PostGres,
     MySQL,
     SQLite3,
@@ -13,8 +13,8 @@ impl ToValue for StoreType {
     ///
     /// # Examples
     /// ```
-    /// let store = StoreType.PostGres.to_value();
-    /// println!("{}", store);
+    /// //let store = StoreType.PostGres.to_value();
+    /// //println!("{}", store);
     /// ```
     fn to_value(&self) -> String {
         match self {
