@@ -5,7 +5,6 @@ use std::process::Command;
 use super::{super::common::common_trait::Start, store_struct::Store};
 use std::thread;
 use log::{info, error};
-use crate::common::common_trait::IndStart;
 
 impl Start for Store {
     /// Start initialisation process for store components
@@ -76,7 +75,7 @@ pub trait FactoryA {
     fn build(&self) -> &String;
 }
 
-pub fn build_postgres_container(options: Option<&HashMap<String, String>>) -> String {
+pub fn build_postgres_container(options: &Option<HashMap<String, String>>) -> String {
     let mut command: String = String::from("-it postgres");
 
     let option_map: &HashMap<String, String>;
