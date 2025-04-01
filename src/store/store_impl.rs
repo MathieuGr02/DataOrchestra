@@ -24,7 +24,7 @@ impl Start for Store {
             
             let init_structure_success = self.init_structure();
             if !init_structure_success {
-                error!("Unable to run initialisation script for store : [{}]", self.image);
+                error!("Unable t o run initialisation script for store : [{}]", self.image);
                 return;
             }
         });

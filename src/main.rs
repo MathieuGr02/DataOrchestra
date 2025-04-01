@@ -38,6 +38,7 @@ fn main() {
     dbg!(&config);
     
     //TODO: Set ports
+    init_docker_env();
     
     // Start different tasks
     // Note: Task reference not referencable anymore
@@ -73,5 +74,9 @@ pub fn initialise_logger(args: &Vec<String>) {
     env_logger::builder()
         .filter_level(log_level)
         .init();
+}
+
+pub fn init_docker_env(){
+
 }
 

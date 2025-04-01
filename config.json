@@ -1,20 +1,35 @@
 {
   "generate": 
   {
+    "id": "",
     "language": "",
-    "script_location":  "",
-    "amount": 1
+    "program":  "",
+    "amount": 1,
+    "target": "",
+    "options": [],
+    "location": ""
   },
   "process": [{
+    "id": "",
     "language": "",
-    "script_location" : "",
-    "amount": 1
+    "program" : "",
+    "amount": 1,
+    "target": "",
+    "options": [],
+    "location": ""
   }],
   "store": {
+    "id": "",
+    "language": "",
+    "program": "",
+    "amount": "",
+    "target": "",
+    "options": [],
+    "location": "",
+
     "image": "postgres",
-    "initialisation_script": "",
     "store_options": {
       "POSTGRES_PASSWORD": "HELLO"
-    }
+    },
   }
 }
