@@ -688,7 +688,7 @@
         <mxCell id="UJmkhw5uD0CbH-l1DmJt-356" value="" style="rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
           <mxGeometry x="740" y="915" width="200" height="135" as="geometry" />
         </mxCell>
-        <mxCell id="UJmkhw5uD0CbH-l1DmJt-357" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;Store&lt;/h1&gt;&lt;p&gt;Specialization of an object. Able to receive data and store it. Can be standalone or belong to a warehouse, which is a collection of store objects.&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=none;" vertex="1" parent="1">
+        <mxCell id="UJmkhw5uD0CbH-l1DmJt-357" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;Generator&lt;/h1&gt;&lt;p&gt;Specialization of an object. Able to generate data and send it further along to another object.&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=none;" vertex="1" parent="1">
           <mxGeometry x="750" y="922.5" width="180" height="120" as="geometry" />
         </mxCell>
         <mxCell id="UJmkhw5uD0CbH-l1DmJt-358" value="Topic needed?" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=#FF0000;labelBackgroundColor=default;" vertex="1" parent="1">
