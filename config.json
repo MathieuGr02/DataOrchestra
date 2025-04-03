@@ -1,35 +1,24 @@
 {
-  "generate": 
-  {
-    "id": "",
-    "language": "",
-    "program":  "",
-    "amount": 1,
-    "target": "",
-    "options": [],
-    "location": ""
-  },
-  "process": [{
-    "id": "",
-    "language": "",
-    "program" : "",
-    "amount": 1,
-    "target": "",
-    "options": [],
-    "location": ""
-  }],
-  "store": {
-    "id": "",
-    "language": "",
-    "program": "",
-    "amount": "",
-    "target": "",
-    "options": [],
-    "location": "",
-
-    "image": "postgres",
-    "store_options": {
-      "POSTGRES_PASSWORD": "HELLO"
-    },
-  }
+  "store":
+    [
+      {
+        "initialisation_script": "",
+        "docker": {
+          "image": "redis",
+          "port": 8910,
+          "network": "orchestra"
+        }
+      },
+      {
+        "initialisation_script": "",
+        "docker": {
+          "image": "postgres",
+          "network": "orchestra",
+          "port": 8080,
+          "options" : {
+            "POSTGRES_PASSWORD": "HELLO"
+          }
+        }
+      }
+    ]
 }

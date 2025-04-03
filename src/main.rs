@@ -1,9 +1,11 @@
 use std::env;
 use std::fs::File;
+use std::net::{IpAddr, Ipv4Addr};
 use std::path::Path;
-use std::ptr::copy;
 use log::{debug, info, LevelFilter};
+use rand::Rng;
 use serde::{Deserialize};
+use std::io::Write;
 
 use HeterogeneousDataOrchester::common::common_trait::Start;
 use HeterogeneousDataOrchester::generate::generate_struct::Generate;
@@ -19,9 +21,23 @@ enum Amount<T> {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all="camelCase")]
+pub struct Node {
+    address: Address
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all="camelCase")]
+pub struct Address {
+    ip: IpAddr,
+    port: u16,
+    internal_port: u8
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all="camelCase")]
 struct Config {
-    process: Amount<Process>,
-    generate: Amount<Generate>,
+   // process: Amount<Process>,
+   // generate: Amount<Generate>,
     store: Amount<Store>
 }
 
@@ -33,22 +49,20 @@ fn main() {
     // Read config.json
     let config_path = Path::new("config.json");
     let config_file = File::open(config_path).expect("Unable to open config file");
-    let config: Config = serde_json::from_reader(config_file).expect("Unable to parse config to struct");
+    let mut config: Config = serde_json::from_reader(config_file).expect("Unable to parse config to struct");
     info!("Finished parsing config.json");
-    dbg!(&config);
-    
-    //TODO: Set ports
-    init_docker_env();
-    
+
+    // Get amount of docker containers to assign ports
+    let mut docker_amount: usize = 0;
+
+    let addresses: Vec<Address> = gen_unique_address(docker_amount);
+    let mut current_address: usize = 0;
+
     // Start different tasks
     // Note: Task reference not referencable anymore
     match config.store {
         Amount::Single(task) => task.start(),
-        Amount::Multiple(tasks) => {
-            for t in tasks {
-                t.start();
-            }
-        }
+        Amount::Multiple(tasks) => tasks.start()
     }
 }
 
@@ -73,10 +87,22 @@ pub fn initialise_logger(args: &Vec<String>) {
     }
     env_logger::builder()
         .filter_level(log_level)
+        .format_timestamp(None)
         .init();
 }
 
-pub fn init_docker_env(){
+pub fn gen_unique_address(amount: usize) -> Vec<Address> {
+    let mut addresses: Vec<Address> = Vec::<Address>::new();
+    for _ in 0..amount {
+        let port = rand::thread_rng().gen_range(100..10000);
+        let internal_port = rand::thread_rng().gen_range(10..100);
+        addresses.push(Address {
+            ip: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            port,
+            internal_port
+        }); 
+    }
 
+    addresses
 }
 
