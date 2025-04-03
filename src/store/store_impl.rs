@@ -1,6 +1,9 @@
+use crate::remote::remote_trait::Remote;
+
 use super::{super::common::common_trait::Start, store_struct::Store};
 use std::thread;
 use log::{info, error};
+use serde::de::value;
 
 impl Start for Store {
     /// Start initialisation process for store components
@@ -21,6 +24,11 @@ impl Start for Store {
                 else {
                     info!("Successfully created docker container for store \"{}\"", &docker.name);
                 }
+
+                let update = docker.execute("apt-get update").wait();
+                dbg!(update);
+                //let git = docker.execute("apt-get install git").wait();
+                //dbg!(git);
             }
         });
         

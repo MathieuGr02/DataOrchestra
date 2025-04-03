@@ -1,9 +1,9 @@
-use std::collections::HashMap;
-use std::fmt::format;
-use std::process::Command;
-use log::{error, info, warn};
+use std::env::args;
+use std::process::{Command, Child, Stdio};
+use log::{debug, error, info, warn};
 use crate::docker::docker_struct::Docker;
 use crate::command::command_func::{output_command, spawn_command, spawn_commands};
+use crate::remote::remote_trait::Remote;
 
 impl Docker {
     /// Create docker container based on specified data
@@ -62,7 +62,7 @@ impl Docker {
 
         command = format!("{command} --name={}", &self.name);
 
-        command = format!("{command} -p 127.0.0.1:{}:{}", &self.port, &self.port % 100);
+        //command = format!("{command} -p {}:{}", &self.address.port, &self.address.internal_port);
 
         if let Some(options) = &self.options {
             for (key, value) in options {
@@ -81,5 +81,54 @@ impl Docker {
         }
 
         command
+    }
+}
+
+impl Remote for Docker {
+    fn connect(&self) {
+    
+    }
+
+    /// Execute command remotely in docker container
+    ///
+    /// # Examples
+    /// 
+    /// ```
+    /// use DataOrchestra::command::Docker;
+    /// let docker: Docker = Docker { image: "ubuntu" };
+    /// docker.execute(&["pwd"])
+    /// ```
+    fn execute(&self, arg: &str) -> Child {
+        debug!("{}", format!("Running command: docker exec -it {} {}", &self.name, arg));
+        let output = if cfg!(target_os = "windows") {
+            Command::new("cmd")
+                .arg(format!("/C docker exec -it {} {}", &self.name, arg))
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .expect("failed to execute process")
+        } else {
+            Command::new("sh")
+                .arg("-c")
+                .arg(format!("docker exec -it {} {}", &self.name, arg))
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .expect("failed to execute process")
+        };
+
+        output    
+    }
+
+    fn get_port(&self) {
+        
+    }
+
+    fn get_ip(&self) {
+        
+    }
+
+    fn get_host(&self) {
+        
     }
 }

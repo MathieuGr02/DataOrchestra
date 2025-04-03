@@ -4,13 +4,15 @@ use std::net::{IpAddr, Ipv4Addr};
 use std::path::Path;
 use log::{debug, info, LevelFilter};
 use rand::Rng;
-use serde::{Deserialize};
+use serde::{Deserialize, Serialize};
 use std::io::Write;
 
-use HeterogeneousDataOrchester::common::common_trait::Start;
-use HeterogeneousDataOrchester::generate::generate_struct::Generate;
-use HeterogeneousDataOrchester::process::process_struct::Process;
-use HeterogeneousDataOrchester::store::store_struct::Store;
+use DataOrchester::common::common_trait::Start;
+use DataOrchester::generate::generate_struct::Generate;
+use DataOrchester::process::process_struct::Process;
+use DataOrchester::store::store_struct::Store;
+
+use DataOrchester::address::Address;
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -19,18 +21,10 @@ enum Amount<T> {
     Multiple(Vec<T>)
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all="camelCase")]
 pub struct Node {
     address: Address
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all="camelCase")]
-pub struct Address {
-    ip: IpAddr,
-    port: u16,
-    internal_port: u8
 }
 
 #[derive(Debug, Deserialize)]
