@@ -80,6 +80,17 @@ impl Docker {
             }
         }
 
+        // Install ssh on docker 
+        // apt-get update
+        // apt-get install openssh-server
+        // mkdir /var/run/sshd
+        // echo "root:password" | chpasswd
+        // echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+        // /usr/sbin/sshd -D
+        //
+        // ssh root@localhost -p [port]
+        // password: password
+
         command
     }
 }
@@ -103,8 +114,8 @@ impl Remote for Docker {
         let output = if cfg!(target_os = "windows") {
             Command::new("cmd")
                 .arg(format!("/C docker exec -it {} {}", &self.name, arg))
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
+//                .stdout(Stdio::piped())
+//                .stderr(Stdio::piped())
                 .spawn()
                 .expect("failed to execute process")
         } else {

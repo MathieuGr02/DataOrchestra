@@ -1,7 +1,7 @@
-use crate::remote::remote_trait::Remote;
+use crate::{command::command_func::spawn_command, remote::remote_trait::Remote};
 
 use super::{super::common::common_trait::Start, store_struct::Store};
-use std::thread;
+use std::{process::Command, thread};
 use log::{info, error};
 use serde::de::value;
 
@@ -25,10 +25,14 @@ impl Start for Store {
                     info!("Successfully created docker container for store \"{}\"", &docker.name);
                 }
 
-                let update = docker.execute("apt-get update").wait();
-                dbg!(update);
-                //let git = docker.execute("apt-get install git").wait();
+                //let update = docker.execute("apt-get update").wait();
+                //dbg!(update);
+
+                //let git = docker.execute("apt-get install -y git").wait();
                 //dbg!(git);
+
+                spawn_command(&format!("docker cp {} {}:/", &self.initialisation_script.unwrap(), &docker.name));
+                docker.execute("sh test.sh");
             }
         });
         

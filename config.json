@@ -10,7 +10,7 @@
         }
       },
       {
-        "initialisation_script": "",
+        "initialisation_script": "E:/Files/UniBasel/Project/DataOrchestra/test.sh",
         "docker": {
           "image": "postgres",
           "network": "orchestra",
