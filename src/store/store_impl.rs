@@ -24,15 +24,6 @@ impl Start for Store {
                 else {
                     info!("Successfully created docker container for store \"{}\"", &docker.name);
                 }
-
-                //let update = docker.execute("apt-get update").wait();
-                //dbg!(update);
-
-                //let git = docker.execute("apt-get install -y git").wait();
-                //dbg!(git);
-
-                spawn_command(&format!("docker cp {} {}:/", &self.initialisation_script.unwrap(), &docker.name));
-                docker.execute("sh test.sh");
             }
         });
         

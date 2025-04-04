@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 #[serde(rename_all="camelCase")]
 pub struct Address {
     pub ip: IpAddr,

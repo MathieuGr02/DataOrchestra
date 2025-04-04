@@ -47,16 +47,27 @@ fn main() {
     info!("Finished parsing config.json");
 
     // Get amount of docker containers to assign ports
-    let mut docker_amount: usize = 0;
+    let mut docker_amount: usize = 2;
 
     let addresses: Vec<Address> = gen_unique_address(docker_amount);
     let mut current_address: usize = 0;
+    
 
     // Start different tasks
     // Note: Task reference not referencable anymore
     match config.store {
-        Amount::Single(task) => task.start(),
-        Amount::Multiple(tasks) => tasks.start()
+        Amount::Single(mut task) => {
+            task.docker.as_mut().unwrap().address = addresses[current_address]; 
+            current_address += 1;
+            task.start();
+        }
+        Amount::Multiple(tasks) => {
+            for mut task in tasks {
+                task.docker.as_mut().unwrap().address = addresses[current_address]; 
+                current_address += 1;
+                task.start();
+            }
+        }
     }
 }
 
@@ -89,11 +100,11 @@ pub fn gen_unique_address(amount: usize) -> Vec<Address> {
     let mut addresses: Vec<Address> = Vec::<Address>::new();
     for _ in 0..amount {
         let port = rand::thread_rng().gen_range(100..10000);
-        let internal_port = rand::thread_rng().gen_range(10..100);
+//        let internal_port = rand::thread_rng().gen_range(10..100);
         addresses.push(Address {
             ip: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
             port,
-            internal_port
+            internal_port: 22
         }); 
     }
 

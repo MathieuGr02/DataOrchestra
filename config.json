@@ -12,12 +12,9 @@
       {
         "initialisation_script": "E:/Files/UniBasel/Project/DataOrchestra/test.sh",
         "docker": {
-          "image": "postgres",
+          "image": "redis",
           "network": "orchestra",
-          "port": 8080,
-          "options" : {
-            "POSTGRES_PASSWORD": "HELLO"
-          }
+          "port": 8080
         }
       }
     ]

@@ -1,4 +1,5 @@
-use std::env::args;
+use std::env::{args, current_dir};
+use std::fmt::format;
 use std::net::{IpAddr, Ipv4Addr};
 use std::process::{Command, Child, Stdio};
 use log::{debug, error, info, warn};
@@ -60,13 +61,9 @@ impl Docker {
         
         // Install ssh server
         info!("Installing shh server on {}", &self.name);
-        self.execute("apt-get update").wait();
-        self.execute("apt-get install -y openssh-server").wait();
-        self.execute("mkdir /var/run/sshd").wait();
-        self.execute("echo \"root:password\" | chpasswd").wait();
-        self.execute("echo \"PermitRootLogin yes\" >> /etc/ssh/sshd_config").wait();
-        self.execute("/usr/sbin/sshd -D");
-        
+        info!("{:?}", current_dir()); 
+        spawn_command(&format!("docker cp src/docker/docker_ssh_init.sh {}:/data", &self.name)).wait();
+        self.execute("sh docker_ssh_init.sh").wait();       
         true
     }
 
@@ -78,7 +75,7 @@ impl Docker {
 
         command = format!("{command} --name={}", &self.name);
 
-        //command = format!("{command} -p {}:{}", &self.address.port, &self.address.internal_port);
+        command = format!("{command} -p {}:{}", &self.address.port, &self.address.internal_port);
 
         if let Some(options) = &self.options {
             for (key, value) in options {
@@ -133,8 +130,8 @@ impl Remote for Docker {
         let output = if cfg!(target_os = "windows") {
             Command::new("cmd")
                 .arg(format!("/C docker exec -it {} {}", &self.name, arg))
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
+            //    .stdout(Stdio::piped())
+            //    .stderr(Stdio::piped())
                 .spawn()
                 .expect("failed to execute process")
         } else {
