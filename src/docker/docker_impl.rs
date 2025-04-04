@@ -58,6 +58,15 @@ impl Docker {
                 
         self.address.ip = IpAddr::V4(Ipv4Addr::new(ip_vec_num[0], ip_vec_num[1], ip_vec_num[2], ip_vec_num[3]));
         
+        // Install ssh server
+        info!("Installing shh server on {}", &self.name);
+        self.execute("apt-get update").wait();
+        self.execute("apt-get install -y openssh-server").wait();
+        self.execute("mkdir /var/run/sshd").wait();
+        self.execute("echo \"root:password\" | chpasswd").wait();
+        self.execute("echo \"PermitRootLogin yes\" >> /etc/ssh/sshd_config").wait();
+        self.execute("/usr/sbin/sshd -D");
+        
         true
     }
 
@@ -124,8 +133,8 @@ impl Remote for Docker {
         let output = if cfg!(target_os = "windows") {
             Command::new("cmd")
                 .arg(format!("/C docker exec -it {} {}", &self.name, arg))
-//                .stdout(Stdio::piped())
-//                .stderr(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
                 .spawn()
                 .expect("failed to execute process")
         } else {
