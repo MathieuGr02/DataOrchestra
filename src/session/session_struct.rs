@@ -5,6 +5,7 @@ pub struct TerminalSession<T> {
     pub session_type: T
 }
 
+/*
 impl Remote for TerminalSession<Docker> {
     fn connect(&self) {
         
@@ -26,5 +27,7 @@ impl Remote for TerminalSession<Docker> {
         
     }
 }
+
+*/
 
 

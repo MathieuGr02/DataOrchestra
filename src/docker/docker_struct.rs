@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, net::{IpAddr, Ipv4Addr}};
 use serde::{Deserialize, Serialize};
 use crate::address::Address;
 
@@ -8,6 +8,14 @@ pub fn default_name() -> String {
 
 pub fn default_network() -> String {
     String::from("orchestra")
+}
+
+pub fn default_address() -> Address {
+    Address {
+        ip: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+        port: 5000,
+        internal_port: 50
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -22,5 +30,6 @@ pub struct Docker {
     pub target: Option<String>,
     // Additional options
     pub options: Option<HashMap<String, String>>,
-    pub address: Option<Address>
+    #[serde(default = "default_address")]
+    pub address: Address
 }

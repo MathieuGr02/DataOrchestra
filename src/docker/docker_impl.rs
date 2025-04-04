@@ -1,4 +1,5 @@
 use std::env::args;
+use std::net::{IpAddr, Ipv4Addr};
 use std::process::{Command, Child, Stdio};
 use log::{debug, error, info, warn};
 use crate::docker::docker_struct::Docker;
@@ -14,7 +15,8 @@ impl Docker {
         let networks: String = output_command("docker network ls");
         if !networks.contains(&self.network) {
             info!("{}", format!("Creating network bridge {}", &self.network));
-            let create_bridge = spawn_command(&format!("docker network create -d bridge {}", &self.network)).wait();
+            let create_bridge = spawn_command(&format!("docker network create -d bridge {}", &self.network))
+                .wait();
 
             if create_bridge.is_err() || (create_bridge.is_ok() && !&create_bridge.as_ref().unwrap().success()) {
                 warn!("Unable to create bridge {} | Code : {}", &self.network, &create_bridge.unwrap().code().unwrap());
@@ -28,28 +30,33 @@ impl Docker {
         let containers: String = output_command("docker ps");
         if containers.contains(&self.name){
             warn!("Re initiating container {}", &self.name);
-            let container_stop = spawn_command(&format!("docker stop {}", &self.name)).wait();
-            let container_rm = spawn_command(&format!("docker rm {}", &self.name)).wait();
+            let container_stop = spawn_command(&format!("docker stop {}", &self.name))
+                .wait();
+            let container_rm = spawn_command(&format!("docker rm {}", &self.name))
+                .wait();
 
         }
-        let docker = spawn_command(&format!("docker run {}", self.get_options())).wait();
+        let docker = spawn_command(&format!("docker run {}", self.get_options()))
+            .wait();
         if docker.is_err() || (docker.is_ok() && !&docker.as_ref().unwrap().success()) {
-            warn!("Unable to create docker container \"{}\" | Code : {}", &self.name, &docker.unwrap().code().unwrap());
+            panic!("Unable to create docker container \"{}\" | Code : {}", &self.name, &docker.unwrap().code().unwrap());
         }
         else {
             info!("Successfully created docker container \"{}\"", &self.name)
         }
 
         // get ip
-        let result = Command::new("sh")
-            .arg("-c")
-            .arg("docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' store")
-            .output();
+        let ip_output = output_command(format!("docker inspect -f {{{{range.NetworkSettings.Networks}}}}{{{{.IPAddress}}}}{{{{end}}}} {}", &self.name).as_str());
 
-        match result {
-            Ok(value) => info!("Docker container \"{}\" ip : {:?}", &self.name, String::from_utf8(value.stdout).unwrap()),
-            Err(value) => warn!("Unable to retrieve ip address from {} | Code : {}", &self.name, value),
-        };
+        info!("Docker container \"{}\" ip : {:?}", &self.name, &ip_output);
+        let ip_output = ip_output.replace("\n", "");
+        let ip_vec = ip_output.split(".").collect::<Vec<&str>>();
+        let mut ip_vec_num = Vec::<u8>::new();
+        for s in ip_vec {
+            ip_vec_num.push(s.parse().unwrap());
+        }
+                
+        self.address.ip = IpAddr::V4(Ipv4Addr::new(ip_vec_num[0], ip_vec_num[1], ip_vec_num[2], ip_vec_num[3]));
         
         true
     }
@@ -81,6 +88,9 @@ impl Docker {
         }
 
         // Install ssh on docker 
+        //
+        // -p port:22
+        //
         // apt-get update
         // apt-get install openssh-server
         // mkdir /var/run/sshd
