@@ -17,13 +17,15 @@ impl Start for Store {
         let store_thread = thread::spawn(move || {
             if let Some(ref mut docker) = self.docker {
                 let init_docker_success = docker.init();
-                if !init_docker_success {
+                /*
+                if !init_docker_success.await {
                     error!("Unable to create docker container for store \"{}\"", &docker.name);
                     return;
                 }
                 else {
                     info!("Successfully created docker container for store \"{}\"", &docker.name);
                 }
+                */
             }
         });
         

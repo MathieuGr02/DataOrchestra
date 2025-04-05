@@ -8,14 +8,6 @@
           "port": 8910,
           "network": "orchestra"
         }
-      },
-      {
-        "initialisation_script": "E:/Files/UniBasel/Project/DataOrchestra/test.sh",
-        "docker": {
-          "image": "redis",
-          "network": "orchestra",
-          "port": 8080
-        }
       }
     ]
 }

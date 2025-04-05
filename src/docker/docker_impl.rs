@@ -1,3 +1,4 @@
+use core::time;
 use std::env::{args, current_dir};
 use std::fmt::format;
 use std::net::{IpAddr, Ipv4Addr};
@@ -7,9 +8,15 @@ use crate::docker::docker_struct::Docker;
 use crate::command::command_func::{output_command, spawn_command, spawn_commands};
 use crate::remote::remote_trait::Remote;
 
+use std::io::prelude::*;
+use std::thread;
+
+use russh::client::{self, Handle};
+use tokio::runtime::Runtime;
+
 impl Docker {
     /// Create docker container based on specified data
-    pub fn init(&mut self) -> bool {
+    pub async fn init(&mut self) -> bool {
         info!("Initializing docker container");
 
         // Create network
@@ -63,7 +70,49 @@ impl Docker {
         info!("Installing shh server on {}", &self.name);
         info!("{:?}", current_dir()); 
         spawn_command(&format!("docker cp src/docker/docker_ssh_init.sh {}:/data", &self.name)).wait();
-        self.execute("sh docker_ssh_init.sh").wait();       
+        //self.execute("-d sh docker_ssh_init.sh").wait();  
+        Command::new("sh")
+            .arg("-c")
+            .arg("docker exec -d -it store sh docker_ssh_init.sh")
+            .spawn()
+            .expect("ErroR");
+
+        thread::sleep(time::Duration::from_secs(10));
+
+        let config = client::Config::default();
+
+        let username = "root";  // Change to your SSH username
+        let password = "password";  // SSH password (or use a private key)
+
+        let mut session = client::connect(
+            "localhost",         // The host or IP address of the Docker container
+            self.address.ip,                // The port you're forwarding to, e.g., 2222
+            &config,
+        )
+        .await
+        .expect("Failed to connect to the SSH server");
+
+        // Authenticate using password
+        session
+        .auth_password(username, password)
+        .await
+        .expect("Failed to authenticate");
+
+        // Execute a command, for example `uptime`
+        let mut channel = session
+          .channel_open_session()
+         .await
+         .expect("Failed to open session");
+
+        channel
+          .exec("uptime")
+         .await
+         .expect("Failed to execute command");
+
+        let output = channel
+          .read_to_string()
+         .await
+         .expect("Failed to read output");
         true
     }
 
@@ -138,8 +187,8 @@ impl Remote for Docker {
             Command::new("sh")
                 .arg("-c")
                 .arg(format!("docker exec -it {} {}", &self.name, arg))
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
+            //    .stdout(Stdio::piped())
+            //    .stderr(Stdio::piped())
                 .spawn()
                 .expect("failed to execute process")
         };

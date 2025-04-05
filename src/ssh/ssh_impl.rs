@@ -4,7 +4,6 @@ use std::process::Output;
 
 use std::error::Error;
 
-use ssh2::Session;
 
 /*
 impl Remote for Ssh {
