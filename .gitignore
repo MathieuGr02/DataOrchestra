@@ -21,3 +21,5 @@ target/
 *.dtmp
 
 *.pdf
+
+.DS_Store
