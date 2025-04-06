@@ -3,20 +3,20 @@ use std::env::{args, current_dir};
 use std::fmt::format;
 use std::net::{IpAddr, Ipv4Addr};
 use std::process::{Command, Child, Stdio};
+use std::time::Duration;
 use log::{debug, error, info, warn};
 use crate::docker::docker_struct::Docker;
 use crate::command::command_func::{output_command, spawn_command, spawn_commands};
-use crate::remote::remote_trait::Remote;
-
-use std::io::prelude::*;
+use crate::ssh::ssh_struct::ssh;
 use std::thread;
 
-use russh::client::{self, Handle};
-use tokio::runtime::Runtime;
+use ssh2::Session;
+use std::net::TcpStream;
+use std::io::Read;
 
 impl Docker {
     /// Create docker container based on specified data
-    pub async fn init(&mut self) -> bool {
+    pub fn init(&mut self) {
         info!("Initializing docker container");
 
         // Create network
@@ -68,52 +68,14 @@ impl Docker {
         
         // Install ssh server
         info!("Installing shh server on {}", &self.name);
-        info!("{:?}", current_dir()); 
-        spawn_command(&format!("docker cp src/docker/docker_ssh_init.sh {}:/data", &self.name)).wait();
-        //self.execute("-d sh docker_ssh_init.sh").wait();  
-        Command::new("sh")
-            .arg("-c")
-            .arg("docker exec -d -it store sh docker_ssh_init.sh")
-            .spawn()
-            .expect("ErroR");
-
-        thread::sleep(time::Duration::from_secs(10));
-
-        let config = client::Config::default();
-
-        let username = "root";  // Change to your SSH username
-        let password = "password";  // SSH password (or use a private key)
-
-        let mut session = client::connect(
-            "localhost",         // The host or IP address of the Docker container
-            self.address.ip,                // The port you're forwarding to, e.g., 2222
-            &config,
-        )
-        .await
-        .expect("Failed to connect to the SSH server");
-
-        // Authenticate using password
-        session
-        .auth_password(username, password)
-        .await
-        .expect("Failed to authenticate");
-
-        // Execute a command, for example `uptime`
-        let mut channel = session
-          .channel_open_session()
-         .await
-         .expect("Failed to open session");
-
-        channel
-          .exec("uptime")
-         .await
-         .expect("Failed to execute command");
-
-        let output = channel
-          .read_to_string()
-         .await
-         .expect("Failed to read output");
-        true
+        info!("{:?}", current_dir());
+        if cfg!(target_os = "windows") { 
+            spawn_command(&"dos2unix src/docker/docker_ssh_init.sh".to_string());
+        }
+        spawn_command(&format!("docker cp src/docker/docker_ssh_init.sh {}:/", &self.name)).wait();
+        //self.execute("-d sh docker_ssh_init.sh").wait();
+        spawn_command(&format!("docker exec -d -it {} sh ../docker_ssh_init.sh", &self.name)).wait();
+        thread::sleep(Duration::from_secs(10));
     }
 
     /// Get docker container options as command input
@@ -158,13 +120,13 @@ impl Docker {
 
         command
     }
-}
 
-impl Remote for Docker {
-    fn connect(&self) {
-    
+    pub fn get_ssh(&mut self) -> ssh {
+        let mut ssh = ssh::new();
+        ssh.connect(&"127.0.0.1".to_string(), self.address.port, &"root".to_string(), &"password".to_string());
+
+        ssh
     }
-
     /// Execute command remotely in docker container
     ///
     /// # Examples

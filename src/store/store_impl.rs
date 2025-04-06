@@ -1,9 +1,8 @@
-use crate::{command::command_func::spawn_command, remote::remote_trait::Remote};
+use crate::{command::command_func::spawn_command};
 
 use super::{super::common::common_trait::Start, store_struct::Store};
 use std::{process::Command, thread};
-use log::{info, error};
-use serde::de::value;
+use log::info;
 
 impl Start for Store {
     /// Start initialisation process for store components
@@ -16,7 +15,10 @@ impl Start for Store {
         
         let store_thread = thread::spawn(move || {
             if let Some(ref mut docker) = self.docker {
-                let init_docker_success = docker.init();
+                docker.init();
+                let ssh = docker.get_ssh();
+                let result = ssh.exec("pwd");
+                println!("{}", result);
                 /*
                 if !init_docker_success.await {
                     error!("Unable to create docker container for store \"{}\"", &docker.name);
