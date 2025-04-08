@@ -1,11 +1,31 @@
 {
+  "process":
+    [
+      {
+        "docker": {
+          "image": "rust",
+          "name": "process",
+          "network": "orchestra"
+        }
+      }
+    ],
+  "generate":
+    [
+      {
+        "docker": {
+          "image": "rust",
+          "name": "generate",
+          "network": "orchestra"
+        }
+      }
+    ],
   "store":
     [
       {
-        "initialisation_script": "",
+        "initialisation_script": "E:/Files/UniBasel/Project/DataOrchestra/config.json",
         "docker": {
           "image": "redis",
-          "port": 8910,
+          "name": "store",
           "network": "orchestra"
         }
       }

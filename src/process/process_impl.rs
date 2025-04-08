@@ -1,17 +1,17 @@
-use super::{super::common::common_trait::Start, generate_struct::Generate};
+use super::{super::common::common_trait::Start, process_struct::Process};
 use std::{path::Path, thread::{self, JoinHandle}};
 use log::info;
 
-impl Start<()> for Generate {
+impl Start<()> for Process {
     /// Start initialisation process for store components
     ///
     /// # Note
     ///
-    /// Calling `generate.start()` moves the store into the thread
+    /// Calling `process.start()` moves the store into the thread
     fn start(mut self) -> JoinHandle<()> {
-        info!("Spawning generate thread");
+        info!("Spawning process thread");
         
-        thread::Builder::new().name("generate".to_string()).spawn(move || {
+        thread::Builder::new().name("process".to_string()).spawn(move || {
             if let Some(ref mut docker) = self.docker {
                 docker.init();
                 let ssh = docker.get_ssh();

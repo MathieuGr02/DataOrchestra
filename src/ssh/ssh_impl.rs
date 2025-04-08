@@ -1,9 +1,11 @@
+use std::fs::File;
+use std::io::Write;
 use std::net::TcpStream;
 use std::path::Path;
 use ssh2::{Session, Channel};
 use super::ssh_struct::ssh;
 use std::io::Read;
-use std::io;
+use std::{fs, io};
 
 use log::error;
 
@@ -81,8 +83,25 @@ impl ssh {
         result
     }
 
-    pub fn upload(&self, file: Path) -> Result<(), Error>{
-        let mut remote_file = self.session.scp_send(file, 0o6444, 10, None);
 
+    pub fn upload(&self, file: &Path, location: &Path) -> Result<(), ssh2::Error>{
+        let mut local_file = File::open(file).unwrap();
+        let remote_file: Result<Channel, ssh2::Error> = self.session.scp_send(location, 0o644, fs::metadata(file).unwrap().len(), None);
+
+        if let Err(ref error) = remote_file {
+            error!("Unable to upload file {}", error);
+        }
+
+        let mut remote_file = remote_file.unwrap();
+        
+        let mut buffer = Vec::new();
+        local_file.read_to_end(&mut buffer);
+        remote_file.write_all(&buffer).unwrap();
+
+        remote_file.send_eof().unwrap();
+        remote_file.wait_eof().unwrap();
+        remote_file.close().unwrap();
+        remote_file.wait_close().unwrap();  
+        return Ok(());
     }
 }

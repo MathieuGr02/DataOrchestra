@@ -1,6 +1,14 @@
 use serde::Deserialize;
 
+use crate::docker::docker_struct::Docker;
+
 #[derive(Debug, Deserialize)]
 pub struct Process {
-    amount: i32
+    #[serde(default = "default_amount")]
+    pub amount: usize,
+    pub docker: Option<Docker>
+}
+
+pub fn default_amount() -> usize {
+    1
 }

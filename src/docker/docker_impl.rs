@@ -10,14 +10,14 @@ use crate::command::command_func::{output_command, spawn_command, spawn_commands
 use crate::ssh::ssh_struct::ssh;
 use std::thread;
 
-use ssh2::Session;
-use std::net::TcpStream;
-use std::io::Read;
-
 impl Docker {
     /// Create docker container based on specified data
     pub fn init(&mut self) {
         info!("Initializing docker container");
+       
+        if self.name == None {
+            self.name = Some(self.image.clone());
+        }
 
         // Create network
         let networks: String = output_command("docker network ls");
@@ -36,27 +36,27 @@ impl Docker {
 
         // Create image
         let containers: String = output_command("docker ps");
-        if containers.contains(&self.name){
-            warn!("Re initiating container {}", &self.name);
-            let container_stop = spawn_command(&format!("docker stop {}", &self.name))
+        if containers.contains(&self.name.as_ref().unwrap().clone()){
+            warn!("Re initiating container {}", &self.name.as_ref().unwrap());
+            let _container_stop = spawn_command(&format!("docker stop {}", &self.name.as_ref().unwrap()))
                 .wait();
-            let container_rm = spawn_command(&format!("docker rm {}", &self.name))
+            let _container_rm = spawn_command(&format!("docker rm {}", &self.name.as_ref().unwrap()))
                 .wait();
 
         }
         let docker = spawn_command(&format!("docker run {}", self.get_options()))
             .wait();
         if docker.is_err() || (docker.is_ok() && !&docker.as_ref().unwrap().success()) {
-            panic!("Unable to create docker container \"{}\" | Code : {}", &self.name, &docker.unwrap().code().unwrap());
+            panic!("Unable to create docker container \"{}\" | Code : {}", &self.name.as_ref().unwrap(), &docker.unwrap().code().unwrap());
         }
         else {
-            info!("Successfully created docker container \"{}\"", &self.name)
+            info!("Successfully created docker container \"{}\"", &self.name.as_ref().unwrap())
         }
 
         // get ip
-        let ip_output = output_command(format!("docker inspect -f {{{{range.NetworkSettings.Networks}}}}{{{{.IPAddress}}}}{{{{end}}}} {}", &self.name).as_str());
+        let ip_output = output_command(format!("docker inspect -f {{{{range.NetworkSettings.Networks}}}}{{{{.IPAddress}}}}{{{{end}}}} {}", &self.name.as_ref().unwrap()).as_str());
 
-        info!("Docker container \"{}\" ip : {:?}", &self.name, &ip_output);
+        info!("Docker container \"{}\" ip : {:?}", &self.name.as_ref().unwrap(), &ip_output);
         let ip_output = ip_output.replace("\n", "");
         let ip_vec = ip_output.split(".").collect::<Vec<&str>>();
         let mut ip_vec_num = Vec::<u8>::new();
@@ -67,14 +67,12 @@ impl Docker {
         self.address.ip = IpAddr::V4(Ipv4Addr::new(ip_vec_num[0], ip_vec_num[1], ip_vec_num[2], ip_vec_num[3]));
         
         // Install ssh server
-        info!("Installing shh server on {}", &self.name);
-        info!("{:?}", current_dir());
+        info!("Installing shh server on {}", &self.name.as_ref().unwrap());
         if cfg!(target_os = "windows") { 
             spawn_command(&"dos2unix src/docker/docker_ssh_init.sh".to_string());
         }
-        spawn_command(&format!("docker cp src/docker/docker_ssh_init.sh {}:/", &self.name)).wait();
-        //self.execute("-d sh docker_ssh_init.sh").wait();
-        spawn_command(&format!("docker exec -d -it {} sh ../docker_ssh_init.sh", &self.name)).wait();
+        spawn_command(&format!("docker cp src/docker/docker_ssh_init.sh {}:/", &self.name.as_ref().unwrap())).wait();
+        spawn_command(&format!("docker exec -d -it {} sh ../docker_ssh_init.sh", &self.name.as_ref().unwrap())).wait();
         thread::sleep(Duration::from_secs(10));
     }
 
@@ -84,7 +82,7 @@ impl Docker {
 
         command = format!("{command} --network={}", &self.network);
 
-        command = format!("{command} --name={}", &self.name);
+        command = format!("{command} --name={}", &self.name.as_ref().unwrap());
 
         command = format!("{command} -p {}:{}", &self.address.port, &self.address.internal_port);
 
@@ -94,9 +92,7 @@ impl Docker {
             }
         }
 
-        if let Some(value) = &self.image {
-            command = format!("{command} -it {value}");
-        }
+        command = format!("{command} -it {}", &self.image);
 
         if let Some(source) = &self.mount {
             if let Some(target) = &self.target {
@@ -137,10 +133,10 @@ impl Docker {
     /// docker.execute(&["pwd"])
     /// ```
     fn execute(&self, arg: &str) -> Child {
-        debug!("{}", format!("Running command: docker exec -it {} {}", &self.name, arg));
+        debug!("{}", format!("Running command: docker exec -it {} {}", &self.name.as_ref().unwrap(), arg));
         let output = if cfg!(target_os = "windows") {
             Command::new("cmd")
-                .arg(format!("/C docker exec -it {} {}", &self.name, arg))
+                .arg(format!("/C docker exec -it {} {}", &self.name.as_ref().unwrap(), arg))
             //    .stdout(Stdio::piped())
             //    .stderr(Stdio::piped())
                 .spawn()
@@ -148,7 +144,7 @@ impl Docker {
         } else {
             Command::new("sh")
                 .arg("-c")
-                .arg(format!("docker exec -it {} {}", &self.name, arg))
+                .arg(format!("docker exec -it {} {}", &self.name.as_ref().unwrap(), arg))
             //    .stdout(Stdio::piped())
             //    .stderr(Stdio::piped())
                 .spawn()

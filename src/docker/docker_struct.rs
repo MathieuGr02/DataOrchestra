@@ -2,10 +2,6 @@ use std::{collections::HashMap, net::{IpAddr, Ipv4Addr}};
 use serde::{Deserialize, Serialize};
 use crate::address::Address;
 
-pub fn default_name() -> String {
-    String::from("store")
-}
-
 pub fn default_network() -> String {
     String::from("orchestra")
 }
@@ -21,9 +17,8 @@ pub fn default_address() -> Address {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all="camelCase")]
 pub struct Docker {
-    #[serde(default = "default_name")]
-    pub name: String,
-    pub image: Option<String>,
+    pub name: Option<String>,
+    pub image: String,
     #[serde(default = "default_network")]
     pub network: String,
     pub mount: Option<String>,

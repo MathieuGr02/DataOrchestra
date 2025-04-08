@@ -2,17 +2,20 @@ use std::env;
 use std::fs::File;
 use std::net::{IpAddr, Ipv4Addr};
 use std::path::Path;
+use std::thread::JoinHandle;
 use log::{debug, info, LevelFilter};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
+
+use DataOrchester::logger::init_logger;
 
 use DataOrchester::common::common_trait::Start;
 use DataOrchester::generate::generate_struct::Generate;
 use DataOrchester::process::process_struct::Process;
 use DataOrchester::store::store_struct::Store;
 
-use DataOrchester::address::Address;
+use DataOrchester::address::{self, Address};
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -30,16 +33,17 @@ pub struct Node {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all="camelCase")]
 struct Config {
-   // process: Amount<Process>,
-   // generate: Amount<Generate>,
+    process: Amount<Process>,
+    generate: Amount<Generate>,
     store: Amount<Store>
 }
 
 fn main() {
     // Read starting arguments
     let args: Vec<String> = env::args().collect();
+    
     initialise_logger(&args);
-
+    
     // Read config.json
     let config_path = Path::new("config.json");
     let config_file = File::open(config_path).expect("Unable to open config file");
@@ -47,11 +51,12 @@ fn main() {
     info!("Finished parsing config.json");
 
     // Get amount of docker containers to assign ports
-    let mut docker_amount: usize = 2;
+    let mut docker_amount: usize = 3;
 
     let addresses: Vec<Address> = gen_unique_address(docker_amount);
     let mut current_address: usize = 0;
     
+    let mut thread_pool: Vec<JoinHandle<()>> = Vec::new();
 
     // Start different tasks
     // Note: Task reference not referencable anymore
@@ -59,15 +64,48 @@ fn main() {
         Amount::Single(mut task) => {
             task.docker.as_mut().unwrap().address = addresses[current_address]; 
             current_address += 1;
-            task.start();
+            thread_pool.push(task.start());
         }
         Amount::Multiple(tasks) => {
             for mut task in tasks {
                 task.docker.as_mut().unwrap().address = addresses[current_address]; 
                 current_address += 1;
-                task.start();
+                thread_pool.push(task.start());
             }
         }
+    }
+    
+    match config.process {
+        Amount::Single(mut task) => {
+            task.docker.as_mut().unwrap().address = addresses[current_address];
+            current_address += 1;
+            thread_pool.push(task.start());
+        }
+        Amount::Multiple(tasks) => {
+            for mut task in tasks {
+                task.docker.as_mut().unwrap().address = addresses[current_address];
+                current_address += 1;
+                thread_pool.push(task.start());
+            }
+        }
+    }
+     
+    match config.generate {
+        Amount::Single(mut task) => {
+            task.docker.as_mut().unwrap().address = addresses[current_address];
+            current_address += 1;
+            thread_pool.push(task.start());
+        }
+        Amount::Multiple(tasks) => {
+            for mut task in tasks {
+                task.docker.as_mut().unwrap().address = addresses[current_address];
+                current_address += 1;
+                thread_pool.push(task.start());
+            }
+        }
+    }
+    for thread in thread_pool {
+        thread.join();
     }
 }
 
@@ -90,10 +128,8 @@ pub fn initialise_logger(args: &Vec<String>) {
             }
         }
     }
-    env_logger::builder()
-        .filter_level(log_level)
-        .format_timestamp(None)
-        .init();
+
+    init_logger(log_level);
 }
 
 pub fn gen_unique_address(amount: usize) -> Vec<Address> {
