@@ -7,6 +7,5 @@ apt-get install -y openssh-server
 mkdir /var/run/sshd
 echo "root:password" | chpasswd
 echo "PermitRootLogin yes" >>/etc/ssh/sshd_config
-echo "Running sshd"
-/usr/sbin/sshd -D
+
 echo "Finished ssh installation"

@@ -1,18 +1,13 @@
-use core::time;
-use std::env::{args, current_dir};
-use std::fmt::format;
 use std::net::{IpAddr, Ipv4Addr};
 use std::process::{Command, Child, Stdio};
-use std::time::Duration;
 use log::{debug, error, info, warn};
 use crate::docker::docker_struct::Docker;
-use crate::command::command_func::{output_command, spawn_command, spawn_commands};
+use crate::command::command_func::{output_command, spawn_command};
 use crate::ssh::ssh_struct::ssh;
-use std::thread;
 
 impl Docker {
-    /// Create docker container based on specified data
-    pub fn init(&mut self) {
+    /// Initialise docker container based on specified data in `Docker` struct.
+    pub fn init(&mut self) -> Result<(), String>{
         info!("Initializing docker container");
        
         if self.name == None {
@@ -47,7 +42,8 @@ impl Docker {
         let docker = spawn_command(&format!("docker run {}", self.get_options()))
             .wait();
         if docker.is_err() || (docker.is_ok() && !&docker.as_ref().unwrap().success()) {
-            panic!("Unable to create docker container \"{}\" | Code : {}", &self.name.as_ref().unwrap(), &docker.unwrap().code().unwrap());
+            error!("Unable to create docker container \"{}\" | Code : {}", &self.name.as_ref().unwrap(), &docker.unwrap().code().unwrap());
+            return Err("Unable to create docker container".to_string());
         }
         else {
             info!("Successfully created docker container \"{}\"", &self.name.as_ref().unwrap())
@@ -68,12 +64,17 @@ impl Docker {
         
         // Install ssh server
         info!("Installing shh server on {}", &self.name.as_ref().unwrap());
-        if cfg!(target_os = "windows") { 
+        if cfg!(target_os = "windows") {
+            // Reformat sh script for linux distro
             spawn_command(&"dos2unix src/docker/docker_ssh_init.sh".to_string());
         }
         spawn_command(&format!("docker cp src/docker/docker_ssh_init.sh {}:/", &self.name.as_ref().unwrap())).wait();
-        spawn_command(&format!("docker exec -d -it {} sh ../docker_ssh_init.sh", &self.name.as_ref().unwrap())).wait();
-        thread::sleep(Duration::from_secs(10));
+        spawn_command(&format!("docker exec -it {} sh ../docker_ssh_init.sh", &self.name.as_ref().unwrap())).wait();
+        
+        // Start ssh server
+        spawn_command(&format!("docker exec -d -it {} /usr/sbin/sshd -D", &self.name.as_ref().unwrap())).wait();
+
+        Ok(())
     }
 
     /// Get docker container options as command input
@@ -97,6 +98,9 @@ impl Docker {
         if let Some(source) = &self.mount {
             if let Some(target) = &self.target {
                 command = format!("{command} --mount source={source}, target={target}");
+            }
+            else {
+                warn!("Mount was specified but no target");
             }
         }
 
@@ -137,16 +141,16 @@ impl Docker {
         let output = if cfg!(target_os = "windows") {
             Command::new("cmd")
                 .arg(format!("/C docker exec -it {} {}", &self.name.as_ref().unwrap(), arg))
-            //    .stdout(Stdio::piped())
-            //    .stderr(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
                 .spawn()
                 .expect("failed to execute process")
         } else {
             Command::new("sh")
                 .arg("-c")
                 .arg(format!("docker exec -it {} {}", &self.name.as_ref().unwrap(), arg))
-            //    .stdout(Stdio::piped())
-            //    .stderr(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
                 .spawn()
                 .expect("failed to execute process")
         };

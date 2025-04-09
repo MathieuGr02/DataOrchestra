@@ -1,5 +1,8 @@
+use crate::ssh::ssh_struct::ssh;
+
 use super::{super::common::common_trait::Start, generate_struct::Generate};
-use std::{path::Path, thread::{self, JoinHandle}};
+use core::panic;
+use std::thread::{self, JoinHandle};
 use log::info;
 
 impl Start<()> for Generate {
@@ -12,21 +15,18 @@ impl Start<()> for Generate {
         info!("Spawning generate thread");
         
         thread::Builder::new().name("generate".to_string()).spawn(move || {
+            let mut ssh: Option<ssh> = None;
+
             if let Some(ref mut docker) = self.docker {
                 docker.init();
-                let ssh = docker.get_ssh();
-                let result = ssh.exec("pwd");
-                println!("{}", result);
-                //let result = ssh.upload(&Path::new(&self.initialisation_script.unwrap()), &Path::new("/config.json"));
-                /*
-                if !init_docker_success.await {
-                    error!("Unable to create docker container for store \"{}\"", &docker.name);
-                    return;
-                }
-                else {
-                    info!("Successfully created docker container for store \"{}\"", &docker.name);
-                }
-                */
+                ssh = Some(docker.get_ssh());
+            }
+            
+            if let Some(ref mut ssh) = ssh {
+                ssh.exec("pwd");
+            }
+            else {
+                panic!("Unable to get ssh client");
             }
         }).unwrap()
     }
