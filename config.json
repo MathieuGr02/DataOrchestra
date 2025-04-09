@@ -13,7 +13,7 @@
     [
       {
         "docker": {
-          "image": "rust",
+          "image": "ppythonn",
           "name": "generate",
           "network": "orchestra"
         }

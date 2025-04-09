@@ -1,3 +1,4 @@
+use std::fmt::format;
 use std::fs::File;
 use std::io::Write;
 use std::net::TcpStream;
@@ -6,6 +7,8 @@ use ssh2::{Session, Channel};
 use super::ssh_struct::ssh;
 use std::io::Read;
 use std::{fs, io};
+
+use walkdir::WalkDir;
 
 use log::error;
 
@@ -84,7 +87,7 @@ impl ssh {
     }
 
 
-    pub fn upload(&self, file: &Path, location: &Path) -> Result<(), ssh2::Error>{
+    pub fn upload_file(&self, file: &Path, location: &Path) -> Result<(), ssh2::Error>{
         let mut local_file = File::open(file).unwrap();
         let remote_file: Result<Channel, ssh2::Error> = self.session.scp_send(location, 0o644, fs::metadata(file).unwrap().len(), None);
 
@@ -103,5 +106,22 @@ impl ssh {
         remote_file.close().unwrap();
         remote_file.wait_close().unwrap();  
         return Ok(());
+    }
+
+    pub fn upload_directory(&self, dir: &Path, location: &Path) -> Result<(), ssh2::Error> {
+        for entry in WalkDir::new(dir) {
+            if let Ok(ref entry) = entry {
+                let remote_path: String = format!("{}/{}", location.display(), entry.path().display()); 
+                if entry.file_type().is_dir() {
+                    self.exec(remote_path.as_str());
+                }
+                else {
+                    self.upload_file(entry.path(), remote_path);
+                }
+            }
+            println!("{}", entry.unwrap().path().display());
+        }
+
+        Ok(())
     }
 }

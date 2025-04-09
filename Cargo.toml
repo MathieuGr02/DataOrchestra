@@ -18,3 +18,5 @@ rand = "0.8"
 ssh2 = "0.9.5"
 
 ansi_term = "0.12.1"
+
+walkdir = "2.5.0"

@@ -1,6 +1,6 @@
 use std::f32::consts::E;
 use std::io::Error;
-use std::process::{Child, Command, Output};
+use std::process::{Child, Command, Output, Stdio};
 use log::debug;
 
 pub fn spawn_command(arg: &String) -> Child {
@@ -10,12 +10,14 @@ pub fn spawn_command(arg: &String) -> Child {
         spawn = Command::new("cmd")
             .arg("/C")
             .arg(arg)
+            .stdout(Stdio::piped())
             .spawn()
             .expect("Failed to spawn command")
     } else {
         spawn = Command::new("sh")
             .arg("-c")
             .arg(arg)
+            .stdout(Stdio::piped())
             .spawn()
             .expect("Failed to spawn command")
     }
@@ -30,12 +32,14 @@ pub fn output_command(arg: &str) -> String {
         output = Command::new("cmd")
             .arg("/C")
             .arg(arg)
+            .stdout(Stdio::piped())
             .output()
             .expect("Unable to output command")
     } else {
         output = Command::new("sh")
             .arg("-c")
             .arg(arg)
+            .stdout(Stdio::piped())
             .output()
             .expect("Unable to output command")
     }
@@ -49,12 +53,14 @@ pub fn spawn_commands(args: &[String]) -> Child {
         spawn = Command::new("cmd")
             .arg("/C")
             .args(args)
+            .stdout(Stdio::piped())
             .spawn()
             .expect("Failed to spawn command")
     } else {
         spawn = Command::new("sh")
             .arg("-c")
             .args(args)
+            .stdout(Stdio::piped())
             .spawn()
             .expect("Failed to spawn command")
     }

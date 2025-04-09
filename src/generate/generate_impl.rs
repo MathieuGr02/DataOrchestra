@@ -1,5 +1,6 @@
 use crate::ssh::ssh_struct::ssh;
 
+use std::path::Path;
 use super::{super::common::common_trait::Start, generate_struct::Generate};
 use core::panic;
 use std::thread::{self, JoinHandle};
@@ -23,7 +24,7 @@ impl Start<()> for Generate {
             }
             
             if let Some(ref mut ssh) = ssh {
-                ssh.exec("pwd");
+                ssh.upload_directory(&Path::new("external"), &Path::new("/"));
             }
             else {
                 panic!("Unable to get ssh client");
